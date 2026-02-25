@@ -6,7 +6,7 @@ const XLSX = require("xlsx");
 const path = require("path");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 const SITE_PASSWORD = process.env.SITE_PASSWORD || "qaws";
 const ALLOWED_IPS = (process.env.ALLOWED_IPS || "").split(",").map((ip) => ip.trim()).filter(Boolean);
 
