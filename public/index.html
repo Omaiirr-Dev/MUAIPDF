@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MUAI Finance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
+
+    header { background: #111; border-bottom: 2px solid #1a6e3a; padding: 1.2rem 2rem; display: flex; align-items: center; gap: 1rem; }
+    header h1 { font-size: 1.6rem; font-weight: 600; color: #fff; }
+    header h1 span { color: #2ecc71; }
+    header .subtitle { color: #777; font-size: 0.85rem; margin-left: auto; }
+
+    .container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+
+    .upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.5rem; }
+
+    .upload-card {
+      border: 2px dashed #333; border-radius: 12px; padding: 2rem 1.5rem;
+      text-align: center; transition: border-color 0.2s, background 0.2s; cursor: pointer; position: relative;
+    }
+    .upload-card:hover, .upload-card.dragover { border-color: #2ecc71; background: #0d1a0f; }
+    .upload-card.excel:hover, .upload-card.excel.dragover { border-color: #3498db; background: #0d131a; }
+    .upload-card.has-file { border-style: solid; }
+    .upload-card.has-file.pdf-card { border-color: #2ecc71; background: #0d1a0f; }
+    .upload-card.has-file.excel-card { border-color: #3498db; background: #0d131a; }
+    .upload-card input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-icon { font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .upload-card p { color: #888; font-size: 0.85rem; }
+    .upload-card p strong.green { color: #2ecc71; }
+    .upload-card p strong.blue { color: #3498db; }
+    .upload-card .card-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #555; margin-bottom: 0.5rem; }
+
+    .file-tag { margin-top: 0.8rem; display: none; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.8rem; color: #aaa; }
+    .file-tag .fname { color: #2ecc71; font-weight: 500; }
+    .file-tag.excel .fname { color: #3498db; }
+    .file-tag .remove-file { color: #e74c3c; cursor: pointer; font-weight: 600; font-size: 1rem; }
+
+    .btn-row { text-align: center; margin-bottom: 1.5rem; display: flex; justify-content: center; gap: 1rem; }
+    .btn {
+      padding: 0.7rem 2.2rem; border: none; border-radius: 8px;
+      font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-purple { background: #9b59b6; color: #fff; }
+    .btn-purple:hover { background: #8e44ad; }
+    .btn-dl { background: #1a1a2e; color: #8be9fd; border: 1px solid #333; }
+    .btn-dl:hover { background: #252545; }
+    .btn:disabled { background: #333 !important; color: #666 !important; cursor: not-allowed; border-color: #333 !important; }
+
+    .status { text-align: center; font-size: 0.95rem; min-height: 1.5rem; margin-bottom: 1rem; }
+    .status.error { color: #e74c3c; }
+    .status.success { color: #2ecc71; }
+    .status.loading { color: #f39c12; }
+
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #f39c12; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 0.5rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .output-section { display: none; margin-bottom: 2rem; }
+
+    .match-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.7rem; margin-bottom: 1.5rem; }
+    .stat-box { background: #111; border: 1px solid #222; border-radius: 10px; padding: 0.8rem; text-align: center; }
+    .stat-box .num { font-size: 1.6rem; font-weight: 700; color: #3498db; }
+    .stat-box .label { font-size: 0.7rem; color: #666; margin-top: 0.15rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-box.green .num { color: #2ecc71; }
+    .stat-box.orange .num { color: #f39c12; }
+    .stat-box.red .num { color: #e74c3c; }
+    .stat-box.purple .num { color: #9b59b6; }
+
+    .section-block { margin-bottom: 1.5rem; }
+    .section-block h3 { font-size: 0.95rem; margin-bottom: 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid #222; }
+    .section-block h3.green { color: #2ecc71; }
+    .section-block h3.red { color: #e74c3c; }
+    .section-block h3.orange { color: #f39c12; }
+    .section-block h3.purple { color: #9b59b6; }
+
+    .scroll-table { max-height: 400px; overflow-y: auto; border-radius: 8px; border: 1px solid #222; }
+    .scroll-table::-webkit-scrollbar { width: 8px; }
+    .scroll-table::-webkit-scrollbar-track { background: #111; }
+    .scroll-table::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+    .mtable { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .mtable th { text-align: left; padding: 0.5rem 0.8rem; background: #161616; color: #888; font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 1; }
+    .mtable td { padding: 0.45rem 0.8rem; border-bottom: 1px solid #1a1a1a; }
+    .mtable .id { color: #3498db; font-family: 'Consolas', monospace; }
+    .mtable .name { color: #ccc; }
+    .mtable .amt { color: #2ecc71; font-family: 'Consolas', monospace; }
+    .mtable .date { color: #888; }
+    .mtable tr:hover td { background: #111; }
+    .mtable .dupe-row td { background: #1a1200; }
+
+    .id-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .id-chip { background: #161616; border: 1px solid #2a2a2a; border-radius: 6px; padding: 0.35rem 0.7rem; font-family: 'Consolas', monospace; font-size: 0.8rem; color: #f39c12; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1><span>MUAI</span> Finance</h1>
+  <div class="subtitle">Student Payment Matcher</div>
+</header>
+
+<div class="container">
+  <div class="upload-row">
+    <div class="upload-card pdf-card" id="pdfZone">
+      <input type="file" id="pdfInput" accept=".pdf">
+      <div class="card-label">Bank Report</div>
+      <div class="upload-icon">&#128196;</div>
+      <p>Drop <strong class="green">PDF</strong> here or click</p>
+      <div class="file-tag" id="pdfTag"><span class="fname" id="pdfName"></span><span class="remove-file" id="pdfRemove">&times;</span></div>
+    </div>
+    <div class="upload-card excel-card excel" id="excelZone">
+      <input type="file" id="excelInput" accept=".xlsx,.xls">
+      <div class="card-label">Student List</div>
+      <div class="upload-icon">&#128203;</div>
+      <p>Drop <strong class="blue">Excel</strong> here or click</p>
+      <div class="file-tag excel" id="excelTag"><span class="fname" id="excelName"></span><span class="remove-file" id="excelRemove">&times;</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-purple" id="matchBtn" disabled>Match Students</button>
+    <button class="btn btn-dl" id="csvBtn" disabled>Download CSV</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="output-section" id="matchSection">
+    <div class="match-stats" id="matchStats"></div>
+    <div id="matchResults"></div>
+  </div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  let pdfFile = null, excelFile = null, lastCsv = "", lastPdfName = "";
+
+  function setStatus(msg, type = "") { $("status").className = "status " + type; $("status").innerHTML = msg; }
+  function updateButtons() {
+    $("matchBtn").disabled = !(pdfFile && excelFile);
+  }
+
+  function setPdf(file) {
+    if (!file || file.type !== "application/pdf") { setStatus("Select a valid PDF", "error"); return; }
+    pdfFile = file; $("pdfName").textContent = file.name; $("pdfTag").style.display = "flex"; $("pdfZone").classList.add("has-file"); updateButtons(); setStatus("");
+  }
+  function clearPdf() { pdfFile = null; $("pdfInput").value = ""; $("pdfTag").style.display = "none"; $("pdfZone").classList.remove("has-file"); updateButtons(); }
+  function setExcel(file) {
+    if (!file || !file.name.match(/\.xlsx?$/i)) { setStatus("Select a valid Excel file", "error"); return; }
+    excelFile = file; $("excelName").textContent = file.name; $("excelTag").style.display = "flex"; $("excelZone").classList.add("has-file"); updateButtons(); setStatus("");
+  }
+  function clearExcel() { excelFile = null; $("excelInput").value = ""; $("excelTag").style.display = "none"; $("excelZone").classList.remove("has-file"); updateButtons(); }
+
+  $("pdfInput").addEventListener("change", (e) => { if (e.target.files[0]) setPdf(e.target.files[0]); });
+  $("excelInput").addEventListener("change", (e) => { if (e.target.files[0]) setExcel(e.target.files[0]); });
+  $("pdfRemove").addEventListener("click", (e) => { e.stopPropagation(); clearPdf(); });
+  $("excelRemove").addEventListener("click", (e) => { e.stopPropagation(); clearExcel(); });
+
+  [$("pdfZone"), $("excelZone")].forEach((z) => {
+    z.addEventListener("dragover", (e) => { e.preventDefault(); z.classList.add("dragover"); });
+    z.addEventListener("dragleave", () => z.classList.remove("dragover"));
+  });
+  $("pdfZone").addEventListener("drop", (e) => { e.preventDefault(); $("pdfZone").classList.remove("dragover"); if (e.dataTransfer.files[0]) setPdf(e.dataTransfer.files[0]); });
+  $("excelZone").addEventListener("drop", (e) => { e.preventDefault(); $("excelZone").classList.remove("dragover"); if (e.dataTransfer.files[0]) setExcel(e.dataTransfer.files[0]); });
+
+  function makeTable(headers, rows, rowClass) {
+    let h = '<div class="scroll-table"><table class="mtable"><tr>' + headers.map(h => '<th>' + h + '</th>').join("") + '</tr>';
+    rows.forEach(r => {
+      const cls = rowClass ? rowClass(r) : "";
+      h += '<tr class="' + cls + '">' + r.map((c, i) => '<td class="' + (headers[i] === "ID" ? "id" : headers[i] === "Name" ? "name" : headers[i] === "Amount" ? "amt" : "date") + '">' + (c ?? "") + '</td>').join("") + '</tr>';
+    });
+    return h + '</table></div>';
+  }
+
+  $("matchBtn").addEventListener("click", async () => {
+    if (!pdfFile || !excelFile) return;
+    setStatus('<span class="spinner"></span> Matching students...', "loading");
+    $("matchSection").style.display = "none";
+    $("csvBtn").disabled = true;
+
+    const fd = new FormData();
+    fd.append("pdf", pdfFile);
+    fd.append("excel", excelFile);
+
+    try {
+      const res = await fetch("/api/match", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      lastCsv = data.csv;
+      lastPdfName = data.pdfFilename.replace(/\.pdf$/i, "");
+      $("csvBtn").disabled = false;
+
+      // Stats
+      $("matchStats").innerHTML =
+        '<div class="stat-box green"><div class="num">' + data.matched.length + '</div><div class="label">Matched</div></div>' +
+        '<div class="stat-box purple"><div class="num">' + data.dupes.length + '</div><div class="label">Dupes</div></div>' +
+        '<div class="stat-box"><div class="num">' + data.totalStudents + '</div><div class="label">Students</div></div>' +
+        '<div class="stat-box red"><div class="num">' + data.notPaid.length + '</div><div class="label">Not Paid</div></div>' +
+        '<div class="stat-box orange"><div class="num">' + (data.unmatchedPdf.length + data.anomalies.length) + '</div><div class="label">Anomalies</div></div>';
+
+      let html = "";
+
+      // Matched
+      if (data.matched.length > 0) {
+        html += '<div class="section-block"><h3 class="green">Matched (' + data.matched.length + ')</h3>';
+        html += makeTable(["ID", "Name", "Amount", "Date"], data.matched.map(s => [s.id, s.name, "\u00A3" + s.amount, s.date]));
+        html += '</div>';
+      }
+
+      // Dupes
+      if (data.dupes.length > 0) {
+        html += '<div class="section-block"><h3 class="purple">Duplicate Payments (' + data.dupes.length + ')</h3>';
+        html += makeTable(["ID", "Name", "Amount", "Date"], data.dupes.map(s => [s.id, s.name, "\u00A3" + s.amount, s.date]));
+        html += '</div>';
+      }
+
+      // Not paid
+      if (data.notPaid.length > 0) {
+        html += '<div class="section-block"><h3 class="red">Not Paid (' + data.notPaid.length + ')</h3>';
+        html += makeTable(["ID", "Name"], data.notPaid.map(s => [s.id, s.name]));
+        html += '</div>';
+      }
+
+      // Anomalies: unknown IDs + no-ID transactions
+      const anomalyCount = data.unmatchedPdf.length + data.anomalies.length;
+      if (anomalyCount > 0) {
+        html += '<div class="section-block"><h3 class="orange">Anomalies (' + anomalyCount + ')</h3>';
+        const anomRows = [];
+        data.unmatchedPdf.forEach(u => anomRows.push(["Unknown ID", u.id, "\u00A3" + u.amount, u.date]));
+        data.anomalies.forEach(a => anomRows.push(["No Student ID", a.reference, a.amount ? "\u00A3" + a.amount : "", a.date]));
+        html += makeTable(["Type", "Reference", "Amount", "Date"], anomRows);
+        html += '</div>';
+      }
+
+      $("matchResults").innerHTML = html;
+      $("matchSection").style.display = "block";
+      setStatus("Matched " + data.matched.length + " students, " + data.dupes.length + " dupes, " + data.notPaid.length + " not paid", "success");
+    } catch (err) { setStatus(err.message, "error"); }
+  });
+
+  // CSV download
+  $("csvBtn").addEventListener("click", () => {
+    if (!lastCsv) return;
+    const blob = new Blob([lastCsv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "MUAI_Match_" + lastPdfName + ".csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+</script>
+
+</body>
+</html>
