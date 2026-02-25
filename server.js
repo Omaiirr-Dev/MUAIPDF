@@ -33,9 +33,9 @@ app.use((req, res, next) => {
   res.status(403).send("Access denied");
 });
 
-// Session-like auth via a cookie
+// Session-like auth via a cookie (hex avoids URL-encoding issues with base64 =)
 const COOKIE_NAME = "muai_auth";
-const COOKIE_VALUE = Buffer.from(SITE_PASSWORD).toString("base64");
+const COOKIE_VALUE = Buffer.from(SITE_PASSWORD).toString("hex");
 
 function isAuthed(req) {
   return req.cookies?.[COOKIE_NAME] === COOKIE_VALUE;
